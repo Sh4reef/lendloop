@@ -3,12 +3,13 @@ import { v } from "convex/values";
 
 export default defineSchema({
   users: defineTable({
-    tokenIdentifier: v.string(), // Clerk user ID or subject
-    name: v.string(),
-    email: v.string(),
-    role: v.union(v.literal("admin"), v.literal("user")),
-    isTrustedLender: v.boolean(),
-    createdAt: v.number(),
+    tokenIdentifier: v.optional(v.string()), // Clerk user ID or subject
+    name: v.optional(v.string()),
+    email: v.optional(v.string()),
+    role: v.optional(v.union(v.literal("admin"), v.literal("user"))),
+    isTrustedLender: v.optional(v.boolean()),
+    isAnonymous: v.optional(v.boolean()),
+    createdAt: v.optional(v.number()),
   })
     .index("by_token", ["tokenIdentifier"])
     .index("by_role", ["role"]),
