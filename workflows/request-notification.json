@@ -1,0 +1,111 @@
+{
+  "name": "LendLoop - Request Notification Workflow",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "request-notification",
+        "options": {}
+      },
+      "id": "node-webhook-1",
+      "name": "Convex Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1.1,
+      "position": [240, 300],
+      "webhookId": "lendloop-request-notification"
+    },
+    {
+      "parameters": {
+        "jsCode": "const crypto = require('crypto');\n\nconst rawBody = JSON.stringify($json.body);\nconst signature = $json.headers['x-lendloop-signature'];\nconst secret = $env.LENDLOOP_WEBHOOK_SECRET;\n\nif (!signature || !secret) {\n  throw new Error('HMAC signature or environment secret missing');\n}\n\nconst expected = crypto.createHmac('sha256', secret).update(rawBody).digest('hex');\n\n// Timing-safe comparison\nconst sigBuf = Buffer.from(signature, 'utf8');\nconst expBuf = Buffer.from(expected, 'utf8');\n\nif (sigBuf.length !== expBuf.length || !crypto.timingSafeEqual(sigBuf, expBuf)) {\n  throw new Error('Invalid HMAC signature verification');\n}\n\nreturn {\n  json: {\n    verified: true,\n    event: $json.headers['x-lendloop-event'],\n    ...$json.body\n  }\n};"
+      },
+      "id": "node-hmac-verify-2",
+      "name": "Verify HMAC-SHA256",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [460, 300]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "string": [
+            {
+              "value1": "={{ $json.eventType }}",
+              "value2": "request.created"
+            }
+          ]
+        }
+      },
+      "id": "node-switch-event-3",
+      "name": "Route Event",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [680, 300]
+    },
+    {
+      "parameters": {
+        "jsCode": "console.log(`[LendLoop Notification] New tool request for '${$json.toolName}' from ${$json.startDate} to ${$json.endDate}. User ID notified: ${$json.targetUserId}`);\nreturn {\n  json: {\n    notified: true,\n    channel: 'log_mock',\n    recipient: $json.targetUserId,\n    message: `A neighbor requested to borrow ${$json.toolName}`\n  }\n};"
+      },
+      "id": "node-notify-owner-4",
+      "name": "Notify Lender",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [900, 200]
+    },
+    {
+      "parameters": {
+        "jsCode": "console.log(`[LendLoop Notification] Tool request for '${$json.toolName}' was updated to status: ${$json.status}. User ID notified: ${$json.targetUserId}`);\nreturn {\n  json: {\n    notified: true,\n    channel: 'log_mock',\n    recipient: $json.targetUserId,\n    message: `Your request for ${$json.toolName} was ${$json.status}`\n  }\n};"
+      },
+      "id": "node-notify-borrower-5",
+      "name": "Notify Borrower",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [900, 400]
+    }
+  ],
+  "connections": {
+    "Convex Webhook": {
+      "main": [
+        [
+          {
+            "node": "Verify HMAC-SHA256",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Verify HMAC-SHA256": {
+      "main": [
+        [
+          {
+            "node": "Route Event",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Route Event": {
+      "main": [
+        [
+          {
+            "node": "Notify Lender",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Notify Borrower",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "errorWorkflow": "LendLoop - Global Error Handler"
+  }
+}

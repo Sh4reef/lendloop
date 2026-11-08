@@ -1,0 +1,39 @@
+{
+  "name": "LendLoop - Global Error Handler",
+  "nodes": [
+    {
+      "parameters": {},
+      "id": "node-error-trigger-1",
+      "name": "Error Trigger",
+      "type": "n8n-nodes-base.errorTrigger",
+      "typeVersion": 1,
+      "position": [240, 300]
+    },
+    {
+      "parameters": {
+        "jsCode": "const errorData = $json.execution?.error || {};\nconst workflow = $json.workflow?.name || 'Unknown Workflow';\n\nconsole.error(`[CRITICAL] LendLoop Workflow Failure in '${workflow}':`, {\n  message: errorData.message,\n  node: errorData.node?.name,\n  timestamp: new Date().toISOString()\n});\n\nreturn {\n  json: {\n    alert: 'Workflow Failure Logged',\n    workflow,\n    errorMessage: errorData.message,\n    failedNode: errorData.node?.name,\n    executionId: $json.execution?.id\n  }\n};"
+      },
+      "id": "node-log-error-2",
+      "name": "Log Failure & Alert",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [480, 300]
+    }
+  ],
+  "connections": {
+    "Error Trigger": {
+      "main": [
+        [
+          {
+            "node": "Log Failure & Alert",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  }
+}

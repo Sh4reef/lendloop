@@ -1,0 +1,163 @@
+{
+  "name": "LendLoop - Overdue Reminders Workflow",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "cronExpression",
+              "expression": "0 9 * * *"
+            }
+          ]
+        }
+      },
+      "id": "node-schedule-1",
+      "name": "Daily 09:00 UTC Trigger",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.1,
+      "position": [200, 300]
+    },
+    {
+      "parameters": {
+        "url": "={{ $env.CONVEX_REMOTE_URL }}/api/overdue-loans",
+        "method": "GET",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ $env.CONVEX_INTERNAL_CRON_SECRET }}"
+            }
+          ]
+        },
+        "options": {
+          "retryOnFail": true,
+          "maxTries": 3,
+          "waitBetweenTries": 2000
+        }
+      },
+      "id": "node-fetch-overdue-2",
+      "name": "Fetch Overdue Loans",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [420, 300]
+    },
+    {
+      "parameters": {
+        "jsCode": "const items = $json.overdueLoans || [];\nconst today = new Date().toISOString().split('T')[0];\nreturn items.map(loan => ({\n  json: {\n    ...loan,\n    today,\n    idempotencyKey: `reminder-${loan.loanId}-${today}`\n  }\n}));"
+      },
+      "id": "node-split-loans-3",
+      "name": "Split & Generate Idempotency Keys",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [640, 300]
+    },
+    {
+      "parameters": {
+        "jsCode": "console.log(`[Overdue Alert] Sending loan return reminder to ${$json.borrowerEmail} for item '${$json.toolName}' (Due: ${$json.endDate})`);\nreturn {\n  json: {\n    sent: true,\n    borrower: $json.borrowerEmail,\n    loanId: $json.loanId,\n    idempotencyKey: $json.idempotencyKey\n  }\n};"
+      },
+      "id": "node-dispatch-reminder-4",
+      "name": "Dispatch Reminder Alert",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [860, 300]
+    },
+    {
+      "parameters": {
+        "url": "={{ $env.CONVEX_REMOTE_URL }}/api/record-reminder",
+        "method": "POST",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ $env.CONVEX_INTERNAL_CRON_SECRET }}"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "loanId",
+              "value": "={{ $json.loanId }}"
+            },
+            {
+              "name": "idempotencyKey",
+              "value": "={{ $json.idempotencyKey }}"
+            },
+            {
+              "name": "channel",
+              "value": "email"
+            }
+          ]
+        },
+        "options": {
+          "retryOnFail": true,
+          "maxTries": 3,
+          "waitBetweenTries": 2000
+        }
+      },
+      "id": "node-idempotent-writeback-5",
+      "name": "Idempotent Write-Back to Convex",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [1080, 300]
+    }
+  ],
+  "connections": {
+    "Daily 09:00 UTC Trigger": {
+      "main": [
+        [
+          {
+            "node": "Fetch Overdue Loans",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fetch Overdue Loans": {
+      "main": [
+        [
+          {
+            "node": "Split & Generate Idempotency Keys",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Split & Generate Idempotency Keys": {
+      "main": [
+        [
+          {
+            "node": "Dispatch Reminder Alert",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Dispatch Reminder Alert": {
+      "main": [
+        [
+          {
+            "node": "Idempotent Write-Back to Convex",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "errorWorkflow": "LendLoop - Global Error Handler"
+  }
+}
