@@ -43,6 +43,31 @@ export const listTools = query({
   handler: async (ctx, args) => {
     const user = await getCurrentUser(ctx);
 
+    if (!user) {
+      // Server-side data minimization: Unauthenticated callers only receive public catalog
+      let q = ctx.db
+        .query("tools")
+        .withIndex("by_status", (q) => q.eq("status", "available"));
+
+      const tools = await q.collect();
+      let filtered = tools;
+      if (args.category && args.category !== "all") {
+        filtered = tools.filter((t) => t.category === args.category);
+      }
+
+      return filtered.map((t) => ({
+        _id: t._id,
+        name: t.name,
+        category: t.category,
+        status: t.status,
+        condition: "Sign in to view",
+        description: "Sign in to view equipment details and lender information.",
+        ownerName: "Neighbor",
+        isTrustedLender: false,
+        isOwner: false,
+      }));
+    }
+
     let allTools = await ctx.db.query("tools").order("desc").collect();
 
     if (args.category && args.category !== "all") {
@@ -57,7 +82,7 @@ export const listTools = query({
           ...tool,
           ownerName: owner?.name || "Neighbor",
           isTrustedLender: owner?.isTrustedLender || false,
-          isOwner: user ? tool.ownerId === user._id : false,
+          isOwner: tool.ownerId === user._id,
         };
       })
     );

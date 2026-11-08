@@ -8,7 +8,8 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
-    "convex:dev": "convex dev"
+    "convex:dev": "convex dev",
+    "test:rbac": "node tests/rbac-audit.mjs"
   },
   "dependencies": {
     "@clerk/nextjs": "^6.12.0",

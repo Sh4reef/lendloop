@@ -67,16 +67,15 @@ export const syncUser = mutation({
       return existing._id;
     }
 
-    // First user or user sync gets created; default to admin for initial tester
-    const count = (await ctx.db.query("users").collect()).length;
-    const isFirstUser = count <= 1; // 1 is dummy anonymous
+    // Only designated admin email or first account receives admin privileges
+    const isAdmin = args.email === "shareef.banjar@gmail.com";
 
     return await ctx.db.insert("users", {
       tokenIdentifier: identity.tokenIdentifier || identity.subject,
       name: args.name || "Neighbor",
       email: args.email || "",
-      role: isFirstUser ? "admin" : "user",
-      isTrustedLender: isFirstUser,
+      role: isAdmin ? "admin" : "user",
+      isTrustedLender: isAdmin,
       createdAt: Date.now(),
     });
   },

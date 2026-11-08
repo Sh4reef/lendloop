@@ -85,6 +85,12 @@ npm run dev
 ```
 Open `http://localhost:3000` to interact with the application.
 
+### 7. Run Automated Server-Side RBAC Audit
+Run the automated test suite verifying server-enforced RBAC and data minimization across queries, mutations, and HTTP endpoints:
+```bash
+npm run test:rbac
+```
+
 ---
 
 ## 🚢 What I Would Change to Run This in Production
