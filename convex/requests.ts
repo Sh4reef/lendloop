@@ -67,7 +67,7 @@ export const createRequest = mutation({
   },
   handler: async (ctx, args) => {
     const user = await requireUser(ctx);
-    const tool = await ctx.db.get(args.toolId);
+    const tool: any = await ctx.db.get(args.toolId);
 
     if (!tool) {
       throw new Error("Tool not found.");
@@ -140,7 +140,7 @@ export const updateRequestStatus = mutation({
       updatedAt: now,
     });
 
-    const tool = await ctx.db.get(request.toolId);
+    const tool: any = await ctx.db.get(request.toolId);
 
     if (args.status === "approved" && tool) {
       // Mark tool as borrowed
@@ -254,8 +254,8 @@ export const getMyRequests = query({
 
     return await Promise.all(
       requests.map(async (r) => {
-        const tool = await ctx.db.get(r.toolId);
-        const owner = await ctx.db.get(r.ownerId);
+        const tool: any = await ctx.db.get(r.toolId);
+        const owner: any = await ctx.db.get(r.ownerId);
         return {
           ...r,
           toolName: tool?.name || "Deleted Tool",
@@ -281,8 +281,8 @@ export const getIncomingRequests = query({
 
     return await Promise.all(
       requests.map(async (r) => {
-        const tool = await ctx.db.get(r.toolId);
-        const requester = await ctx.db.get(r.requesterId);
+        const tool: any = await ctx.db.get(r.toolId);
+        const requester: any = await ctx.db.get(r.requesterId);
         return {
           ...r,
           toolName: tool?.name || "Deleted Tool",

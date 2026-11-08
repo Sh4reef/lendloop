@@ -1,6 +1,6 @@
 import { httpRouter } from "convex/server";
 import { httpAction } from "./_generated/server";
-import { api } from "./_generated/api";
+import { api, internal } from "./_generated/api";
 
 const http = httpRouter();
 
@@ -25,7 +25,7 @@ http.route({
     const todayStr = new Date().toISOString().split("T")[0];
 
     // Query active loans whose endDate is prior to today
-    const loans = await ctx.runQuery(api.loans.getAllLoansAdminInternal, {});
+    const loans = await ctx.runQuery(internal.loans.getAllLoansAdminInternal, {});
     const overdue = loans.filter(
       (l: any) => l.status === "active" && l.endDate < todayStr
     );

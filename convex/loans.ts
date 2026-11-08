@@ -12,9 +12,9 @@ export const getAllLoansAdminInternal = internalQuery({
 
     return await Promise.all(
       loans.map(async (l) => {
-        const tool = await ctx.db.get(l.toolId);
-        const borrower = await ctx.db.get(l.borrowerId);
-        const lender = await ctx.db.get(l.lenderId);
+        const tool: any = await ctx.db.get(l.toolId);
+        const borrower: any = await ctx.db.get(l.borrowerId);
+        const lender: any = await ctx.db.get(l.lenderId);
         return {
           ...l,
           toolName: tool?.name || "Unknown Tool",
@@ -38,9 +38,9 @@ export const getAllLoans = query({
 
     return await Promise.all(
       loans.map(async (l) => {
-        const tool = await ctx.db.get(l.toolId);
-        const borrower = await ctx.db.get(l.borrowerId);
-        const lender = await ctx.db.get(l.lenderId);
+        const tool: any = await ctx.db.get(l.toolId);
+        const borrower: any = await ctx.db.get(l.borrowerId);
+        const lender: any = await ctx.db.get(l.lenderId);
         return {
           ...l,
           toolName: tool?.name || "Unknown Tool",
@@ -79,7 +79,7 @@ export const getMyLoans = query({
     const all = Array.from(map.values());
     return await Promise.all(
       all.map(async (l) => {
-        const tool = await ctx.db.get(l.toolId);
+        const tool: any = await ctx.db.get(l.toolId);
         return {
           ...l,
           toolName: tool?.name || "Unknown Tool",

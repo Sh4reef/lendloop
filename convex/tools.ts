@@ -55,7 +55,7 @@ export const listTools = query({
     // Attach lender badge
     return await Promise.all(
       allTools.map(async (tool) => {
-        const owner = await ctx.db.get(tool.ownerId);
+        const owner: any = await ctx.db.get(tool.ownerId);
         return {
           ...tool,
           ownerName: owner?.name || "Neighbor",
