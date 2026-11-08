@@ -1,6 +1,6 @@
 import { query, mutation, internalQuery } from "./_generated/server";
 import { v } from "convex/values";
-import { requireUser, requireAdmin } from "./users";
+import { requireUser, requireAdmin, getCurrentUser } from "./users";
 
 /**
  * Internal query for HTTP cron actions
@@ -33,7 +33,10 @@ export const getAllLoansAdminInternal = internalQuery({
 export const getAllLoans = query({
   args: {},
   handler: async (ctx) => {
-    await requireAdmin(ctx);
+    const user = await getCurrentUser(ctx);
+    if (!user || user.role !== "admin") {
+      return [];
+    }
     const loans = await ctx.db.query("loans").order("desc").collect();
 
     return await Promise.all(
@@ -59,7 +62,10 @@ export const getAllLoans = query({
 export const getMyLoans = query({
   args: {},
   handler: async (ctx) => {
-    const user = await requireUser(ctx);
+    const user = await getCurrentUser(ctx);
+    if (!user) {
+      return [];
+    }
 
     const asBorrower = await ctx.db
       .query("loans")

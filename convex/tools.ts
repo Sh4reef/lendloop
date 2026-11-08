@@ -42,9 +42,6 @@ export const listTools = query({
   },
   handler: async (ctx, args) => {
     const user = await getCurrentUser(ctx);
-    if (!user) {
-      throw new Error("Unauthorized: Sign in required to browse full tool catalog.");
-    }
 
     let allTools = await ctx.db.query("tools").order("desc").collect();
 
@@ -60,7 +57,7 @@ export const listTools = query({
           ...tool,
           ownerName: owner?.name || "Neighbor",
           isTrustedLender: owner?.isTrustedLender || false,
-          isOwner: tool.ownerId === user._id,
+          isOwner: user ? tool.ownerId === user._id : false,
         };
       })
     );
@@ -73,7 +70,10 @@ export const listTools = query({
 export const getMyListings = query({
   args: {},
   handler: async (ctx) => {
-    const user = await requireUser(ctx);
+    const user = await getCurrentUser(ctx);
+    if (!user) {
+      return [];
+    }
     return await ctx.db
       .query("tools")
       .withIndex("by_owner", (q) => q.eq("ownerId", user._id))

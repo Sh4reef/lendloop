@@ -6,6 +6,15 @@ export async function getCurrentUser(ctx: QueryCtx | MutationCtx) {
   if (!identity) {
     return null;
   }
+  // Search by tokenIdentifier first, then subject
+  if (identity.tokenIdentifier) {
+    const byToken = await ctx.db
+      .query("users")
+      .withIndex("by_token", (q) => q.eq("tokenIdentifier", identity.tokenIdentifier))
+      .first();
+    if (byToken) return byToken;
+  }
+
   return await ctx.db
     .query("users")
     .withIndex("by_token", (q) => q.eq("tokenIdentifier", identity.subject))
@@ -36,29 +45,72 @@ export const syncUser = mutation({
   handler: async (ctx, args) => {
     const identity = await ctx.auth.getUserIdentity();
     if (!identity) {
-      throw new Error("Not authenticated");
+      return null;
     }
 
+    const existing =
+      (identity.tokenIdentifier &&
+        (await ctx.db
+          .query("users")
+          .withIndex("by_token", (q) => q.eq("tokenIdentifier", identity.tokenIdentifier))
+          .first())) ||
+      (await ctx.db
+        .query("users")
+        .withIndex("by_token", (q) => q.eq("tokenIdentifier", identity.subject))
+        .first());
+
+    if (existing) {
+      await ctx.db.patch(existing._id, {
+        name: args.name || existing.name || "Neighbor",
+        email: args.email || existing.email || "",
+      });
+      return existing._id;
+    }
+
+    // First user or user sync gets created; default to admin for initial tester
+    const count = (await ctx.db.query("users").collect()).length;
+    const isFirstUser = count <= 1; // 1 is dummy anonymous
+
+    return await ctx.db.insert("users", {
+      tokenIdentifier: identity.tokenIdentifier || identity.subject,
+      name: args.name || "Neighbor",
+      email: args.email || "",
+      role: isFirstUser ? "admin" : "user",
+      isTrustedLender: isFirstUser,
+      createdAt: Date.now(),
+    });
+  },
+});
+
+export const seedUserInternal = mutation({
+  args: {
+    tokenIdentifier: v.string(),
+    name: v.string(),
+    email: v.string(),
+    role: v.union(v.literal("admin"), v.literal("user")),
+  },
+  handler: async (ctx, args) => {
     const existing = await ctx.db
       .query("users")
-      .withIndex("by_token", (q) => q.eq("tokenIdentifier", identity.subject))
+      .withIndex("by_token", (q) => q.eq("tokenIdentifier", args.tokenIdentifier))
       .first();
 
     if (existing) {
       await ctx.db.patch(existing._id, {
         name: args.name,
         email: args.email,
+        role: args.role,
+        isTrustedLender: true,
       });
       return existing._id;
     }
 
-    // Default to user role, first user could be admin or assigned via env
     return await ctx.db.insert("users", {
-      tokenIdentifier: identity.subject,
+      tokenIdentifier: args.tokenIdentifier,
       name: args.name,
       email: args.email,
-      role: "user",
-      isTrustedLender: false,
+      role: args.role,
+      isTrustedLender: true,
       createdAt: Date.now(),
     });
   },

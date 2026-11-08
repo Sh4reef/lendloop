@@ -245,7 +245,10 @@ export const markReturned = mutation({
 export const getMyRequests = query({
   args: {},
   handler: async (ctx) => {
-    const user = await requireUser(ctx);
+    const user = await getCurrentUser(ctx);
+    if (!user) {
+      return [];
+    }
     const requests = await ctx.db
       .query("requests")
       .withIndex("by_requester", (q) => q.eq("requesterId", user._id))
@@ -272,7 +275,10 @@ export const getMyRequests = query({
 export const getIncomingRequests = query({
   args: {},
   handler: async (ctx) => {
-    const user = await requireUser(ctx);
+    const user = await getCurrentUser(ctx);
+    if (!user) {
+      return [];
+    }
     const requests = await ctx.db
       .query("requests")
       .withIndex("by_owner", (q) => q.eq("ownerId", user._id))

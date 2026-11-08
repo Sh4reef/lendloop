@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useQuery, useMutation } from "convex/react";
 import { api } from "../../convex/_generated/api";
 import { UserButton, useUser } from "@clerk/nextjs";
@@ -22,7 +22,7 @@ import {
 } from "lucide-react";
 
 export default function DashboardPage() {
-  const { user } = useUser();
+  const { user, isLoaded, isSignedIn } = useUser();
   const [activeTab, setActiveTab] = useState<"catalog" | "listings" | "requests" | "incoming" | "loans">("catalog");
   const [selectedCategory, setSelectedCategory] = useState<string>("all");
 
@@ -50,11 +50,21 @@ export default function DashboardPage() {
   const myLoans = useQuery(api.loans.getMyLoans);
 
   // Convex Mutations
+  const syncUser = useMutation(api.users.syncUser);
   const createTool = useMutation(api.tools.createTool);
   const deleteTool = useMutation(api.tools.deleteTool);
   const createRequest = useMutation(api.requests.createRequest);
   const updateRequestStatus = useMutation(api.requests.updateRequestStatus);
   const markReturned = useMutation(api.requests.markReturned);
+
+  useEffect(() => {
+    if (isLoaded && isSignedIn && user) {
+      syncUser({
+        name: user.fullName || user.firstName || user.username || "Neighbor",
+        email: user.primaryEmailAddress?.emailAddress || "",
+      }).catch(console.error);
+    }
+  }, [isLoaded, isSignedIn, user, syncUser]);
 
   const handleCreateTool = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -85,6 +95,17 @@ export default function DashboardPage() {
     setRequestNotes("");
     setActiveTab("requests");
   };
+
+  if (!isLoaded) {
+    return (
+      <div className="min-h-screen bg-slate-50 flex items-center justify-center">
+        <div className="flex items-center gap-2 text-slate-500 text-sm">
+          <div className="w-5 h-5 border-2 border-emerald-600 border-t-transparent rounded-full animate-spin" />
+          <span>Loading LendLoop dashboard...</span>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-slate-50 flex flex-col">
