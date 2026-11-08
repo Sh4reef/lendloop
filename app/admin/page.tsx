@@ -3,7 +3,8 @@
 import { useQuery, useMutation } from "convex/react";
 import { api } from "../../convex/_generated/api";
 import Link from "next/link";
-import { ShieldCheck, Trash2, ArrowLeft, Wrench, AlertTriangle, Users } from "lucide-react";
+import { notFound } from "next/navigation";
+import { ShieldCheck, Trash2, ArrowLeft, Wrench, Users } from "lucide-react";
 
 export default function AdminPage() {
   const viewer = useQuery(api.users.getViewer);
@@ -16,24 +17,9 @@ export default function AdminPage() {
     return <div className="p-8 text-center text-slate-500">Checking authorization...</div>;
   }
 
+  // Prevent endpoint enumeration / reconnaissance by returning 404 for unauthorized users
   if (viewer?.role !== "admin") {
-    return (
-      <div className="min-h-screen bg-slate-50 flex items-center justify-center p-4">
-        <div className="bg-white p-8 rounded-2xl border border-rose-200 max-w-md text-center shadow-sm">
-          <AlertTriangle className="w-12 h-12 text-rose-500 mx-auto mb-3" />
-          <h2 className="text-xl font-bold text-slate-900">Access Denied</h2>
-          <p className="text-sm text-slate-600 mt-2">
-            This area requires administrative privileges. Server-side Convex functions enforce RBAC and reject unauthorized calls.
-          </p>
-          <Link
-            href="/dashboard"
-            className="mt-6 inline-block px-4 py-2 text-sm font-semibold bg-slate-900 text-white rounded-lg"
-          >
-            Return to Dashboard
-          </Link>
-        </div>
-      </div>
-    );
+    notFound();
   }
 
   return (
