@@ -19,6 +19,7 @@ import {
   Bell,
   Trash2,
   Sparkles,
+  Filter,
 } from "lucide-react";
 
 export default function DashboardPage() {
@@ -111,41 +112,44 @@ export default function DashboardPage() {
     <div className="min-h-screen bg-slate-50 flex flex-col">
       {/* Navigation */}
       <header className="border-b border-slate-200 bg-white sticky top-0 z-20">
-        <div className="max-w-6xl mx-auto px-4 h-16 flex items-center justify-between">
-          <div className="flex items-center gap-3">
+        <div className="max-w-6xl mx-auto px-4 h-16 flex items-center justify-between gap-2">
+          <div className="flex items-center gap-2 sm:gap-3 shrink-0">
             <Link href="/" className="flex items-center gap-2">
-              <div className="h-8 w-8 bg-emerald-600 rounded-lg flex items-center justify-center text-white">
+              <div className="h-8 w-8 bg-emerald-600 rounded-lg flex items-center justify-center text-white shrink-0 shadow-sm">
                 <Wrench className="w-4 h-4" />
               </div>
-              <span className="font-bold text-lg text-slate-900">LendLoop</span>
+              <span className="font-bold text-lg text-slate-900 tracking-tight">LendLoop</span>
             </Link>
-            <span className="text-xs px-2 py-0.5 rounded bg-slate-100 text-slate-600 border border-slate-200 font-mono">
+            <span className="hidden sm:inline-block text-xs px-2 py-0.5 rounded bg-slate-100 text-slate-600 border border-slate-200 font-mono">
               Dashboard
             </span>
           </div>
 
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-2 sm:gap-3 shrink-0">
             {viewer?.role === "admin" && (
               <Link
                 href="/admin"
-                className="text-xs font-semibold px-2.5 py-1 bg-amber-100 text-amber-800 rounded-md border border-amber-200 hover:bg-amber-200"
+                className="text-xs font-semibold px-2 py-1 sm:px-2.5 sm:py-1 bg-amber-100 text-amber-800 rounded-md border border-amber-200 hover:bg-amber-200 transition"
               >
-                Admin Panel
+                Admin<span className="hidden sm:inline"> Panel</span>
               </Link>
             )}
             <button
               onClick={() => setShowAddModal(true)}
-              className="px-3.5 py-1.5 text-xs font-semibold bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg shadow-sm transition flex items-center gap-1.5"
+              className="px-2.5 py-1.5 sm:px-3.5 sm:py-1.5 text-xs font-semibold bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg shadow-sm transition flex items-center gap-1 sm:gap-1.5 whitespace-nowrap"
             >
               <Plus className="w-3.5 h-3.5" />
-              List a Tool
+              <span className="hidden sm:inline">List a Tool</span>
+              <span className="sm:hidden">List</span>
             </button>
-            <UserButton afterSignOutUrl="/" />
+            <div className="shrink-0 flex items-center">
+              <UserButton afterSignOutUrl="/" />
+            </div>
           </div>
         </div>
 
         {/* Navigation Tabs */}
-        <div className="max-w-6xl mx-auto px-4 flex gap-6 overflow-x-auto text-sm font-medium border-t border-slate-100">
+        <div className="max-w-6xl mx-auto px-4 flex gap-4 sm:gap-6 overflow-x-auto text-xs sm:text-sm font-medium border-t border-slate-100">
           {[
             { id: "catalog", label: "Browse Tools" },
             { id: "listings", label: `My Listings (${myListings?.length ?? 0})` },
@@ -156,7 +160,7 @@ export default function DashboardPage() {
             <button
               key={tab.id}
               onClick={() => setActiveTab(tab.id as any)}
-              className={`py-3.5 border-b-2 transition whitespace-nowrap ${
+              className={`py-3 sm:py-3.5 border-b-2 transition whitespace-nowrap ${
                 activeTab === tab.id
                   ? "border-emerald-600 text-emerald-600 font-semibold"
                   : "border-transparent text-slate-500 hover:text-slate-800"
@@ -173,27 +177,34 @@ export default function DashboardPage() {
         {/* TAB 1: BROWSE CATALOG */}
         {activeTab === "catalog" && (
           <div>
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
-              <div>
-                <h2 className="text-xl font-bold text-slate-900">Neighborhood Equipment</h2>
-                <p className="text-sm text-slate-500">Borrow tools from trusted neighbors around your area.</p>
-              </div>
+            {/* Catalog Section Header */}
+            <div className="mb-6">
+              <h2 className="text-xl sm:text-2xl font-bold text-slate-900">Neighborhood Equipment</h2>
+              <p className="text-sm text-slate-500 mt-1">Borrow tools from trusted neighbors around your area.</p>
+            </div>
 
-              {/* Category Filter */}
-              <div className="flex gap-2 overflow-x-auto">
-                {["all", "power tools", "garden", "kitchen", "camping", "other"].map((c) => (
-                  <button
-                    key={c}
-                    onClick={() => setSelectedCategory(c)}
-                    className={`px-3 py-1 text-xs font-medium rounded-full capitalize ${
-                      selectedCategory === c
-                        ? "bg-slate-900 text-white"
-                        : "bg-white text-slate-600 border border-slate-200 hover:bg-slate-50"
-                    }`}
-                  >
-                    {c}
-                  </button>
-                ))}
+            {/* Dedicated Full-Width Category Filter Row */}
+            <div className="w-full bg-white border border-slate-200/90 rounded-2xl p-2 sm:p-2.5 mb-8 shadow-sm">
+              <div className="flex items-center gap-2 overflow-x-auto px-1 py-0.5">
+                <div className="flex items-center gap-1.5 pl-2 pr-3 py-1 text-xs font-semibold text-slate-500 uppercase tracking-wider shrink-0 border-r border-slate-200">
+                  <Filter className="w-3.5 h-3.5 text-slate-400 shrink-0" />
+                  <span>Filters</span>
+                </div>
+                <div className="flex items-center gap-1.5 min-w-max">
+                  {["all", "power tools", "garden", "kitchen", "camping", "other"].map((c) => (
+                    <button
+                      key={c}
+                      onClick={() => setSelectedCategory(c)}
+                      className={`px-3.5 py-1.5 text-xs font-medium rounded-xl capitalize whitespace-nowrap transition-all duration-150 ${
+                        selectedCategory === c
+                          ? "bg-slate-900 text-white shadow-sm ring-1 ring-slate-900"
+                          : "bg-slate-50 text-slate-600 hover:bg-slate-100 hover:text-slate-900 border border-slate-200/60"
+                      }`}
+                    >
+                      {c}
+                    </button>
+                  ))}
+                </div>
               </div>
             </div>
 

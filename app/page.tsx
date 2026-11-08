@@ -29,38 +29,39 @@ export default function HomePage() {
     <div className="min-h-screen flex flex-col bg-slate-50">
       {/* Top Navigation */}
       <header className="border-b border-slate-200 bg-white/80 backdrop-blur-md sticky top-0 z-30">
-        <div className="max-w-6xl mx-auto px-4 h-16 flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <div className="h-9 w-9 bg-emerald-600 rounded-lg flex items-center justify-center text-white shadow-sm">
+        <div className="max-w-6xl mx-auto px-4 h-16 flex items-center justify-between gap-2">
+          <div className="flex items-center gap-2 shrink-0">
+            <div className="h-9 w-9 bg-emerald-600 rounded-lg flex items-center justify-center text-white shadow-sm shrink-0">
               <Wrench className="w-5 h-5" />
             </div>
-            <span className="font-bold text-xl tracking-tight text-slate-900">
+            <span className="font-bold text-lg sm:text-xl tracking-tight text-slate-900">
               LendLoop
             </span>
           </div>
 
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2 sm:gap-3 shrink-0">
             {isLoaded && isSignedIn ? (
-              <div className="flex items-center gap-4">
+              <div className="flex items-center gap-2 sm:gap-4">
                 <Link
                   href="/dashboard"
-                  className="px-4 py-2 text-sm font-medium bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg shadow-sm transition flex items-center gap-1.5"
+                  className="px-3 py-1.5 sm:px-4 sm:py-2 text-xs sm:text-sm font-medium bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg shadow-sm transition flex items-center gap-1.5 whitespace-nowrap"
                 >
-                  Go to Dashboard
-                  <ArrowRight className="w-4 h-4" />
+                  <span className="hidden sm:inline">Go to </span>Dashboard
+                  <ArrowRight className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
                 </Link>
                 <UserButton afterSignOutUrl="/" />
               </div>
             ) : (
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-1.5 sm:gap-2">
                 <SignInButton mode="modal">
-                  <button className="px-4 py-2 text-sm font-medium text-slate-700 hover:text-slate-900 transition">
+                  <button className="px-2.5 py-1.5 sm:px-4 sm:py-2 text-xs sm:text-sm font-medium text-slate-700 hover:text-slate-900 transition whitespace-nowrap">
                     Sign In
                   </button>
                 </SignInButton>
                 <SignUpButton mode="modal">
-                  <button className="px-4 py-2 text-sm font-medium bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg shadow-sm transition">
-                    Sign in to lend or borrow
+                  <button className="px-3 py-1.5 sm:px-4 sm:py-2 text-xs sm:text-sm font-medium bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg shadow-sm transition whitespace-nowrap">
+                    <span className="hidden sm:inline">Sign in to lend or borrow</span>
+                    <span className="sm:hidden">Get Started</span>
                   </button>
                 </SignUpButton>
               </div>
@@ -100,30 +101,36 @@ export default function HomePage() {
 
       {/* Public Catalog Section (Data Minimized) */}
       <main className="max-w-6xl mx-auto px-4 py-12 flex-1 w-full">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
-          <div>
-            <h2 className="text-2xl font-bold text-slate-900">Available in Your Neighborhood</h2>
-            <p className="text-sm text-slate-500 mt-1">
-              Browse available equipment below. Sign in to view full descriptions, lender details, and request loans.
-            </p>
-          </div>
+        {/* Section Heading */}
+        <div className="mb-6">
+          <h2 className="text-2xl sm:text-3xl font-bold text-slate-900 tracking-tight">Available in Your Neighborhood</h2>
+          <p className="text-sm text-slate-500 mt-1.5">
+            Browse available equipment below. Sign in to view full descriptions, lender details, and request loans.
+          </p>
+        </div>
 
-          {/* Category Filter */}
-          <div className="flex items-center gap-2 overflow-x-auto pb-2 sm:pb-0">
-            <Filter className="w-4 h-4 text-slate-400 shrink-0" />
-            {CATEGORIES.map((cat) => (
-              <button
-                key={cat}
-                onClick={() => setSelectedCategory(cat)}
-                className={`px-3 py-1.5 text-xs font-medium rounded-full capitalize whitespace-nowrap transition ${
-                  selectedCategory === cat
-                    ? "bg-slate-900 text-white shadow-sm"
-                    : "bg-white text-slate-600 border border-slate-200 hover:bg-slate-100"
-                }`}
-              >
-                {cat}
-              </button>
-            ))}
+        {/* Dedicated Full-Width Category Filter Row */}
+        <div className="w-full bg-white border border-slate-200/90 rounded-2xl p-2 sm:p-2.5 mb-8 shadow-sm">
+          <div className="flex items-center gap-2 overflow-x-auto px-1 py-0.5">
+            <div className="flex items-center gap-1.5 pl-2 pr-3 py-1 text-xs font-semibold text-slate-500 uppercase tracking-wider shrink-0 border-r border-slate-200">
+              <Filter className="w-3.5 h-3.5 text-slate-400 shrink-0" />
+              <span>Filters</span>
+            </div>
+            <div className="flex items-center gap-1.5 min-w-max">
+              {CATEGORIES.map((cat) => (
+                <button
+                  key={cat}
+                  onClick={() => setSelectedCategory(cat)}
+                  className={`px-3.5 py-1.5 text-xs font-medium rounded-xl capitalize whitespace-nowrap transition-all duration-150 ${
+                    selectedCategory === cat
+                      ? "bg-slate-900 text-white shadow-sm ring-1 ring-slate-900"
+                      : "bg-slate-50 text-slate-600 hover:bg-slate-100 hover:text-slate-900 border border-slate-200/60"
+                  }`}
+                >
+                  {cat}
+                </button>
+              ))}
+            </div>
           </div>
         </div>
 
