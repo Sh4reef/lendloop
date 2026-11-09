@@ -21,6 +21,7 @@ import {
   Sparkles,
   Filter,
 } from "lucide-react";
+import Loading from "../loading";
 
 export default function DashboardPage() {
   const { user, isLoaded, isSignedIn } = useUser();
@@ -98,14 +99,7 @@ export default function DashboardPage() {
   };
 
   if (!isLoaded) {
-    return (
-      <div className="min-h-screen bg-slate-50 flex items-center justify-center">
-        <div className="flex items-center gap-2 text-slate-500 text-sm">
-          <div className="w-5 h-5 border-2 border-emerald-600 border-t-transparent rounded-full animate-spin" />
-          <span>Loading LendLoop dashboard...</span>
-        </div>
-      </div>
-    );
+    return <Loading />;
   }
 
   return (

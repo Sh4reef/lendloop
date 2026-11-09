@@ -5,6 +5,7 @@ import { api } from "../../convex/_generated/api";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ShieldCheck, ArrowLeft, Wrench, Users } from "lucide-react";
+import Loading from "../loading";
 
 export default function AdminPage() {
   const viewer = useQuery(api.users.getViewer);
@@ -14,14 +15,7 @@ export default function AdminPage() {
   const setTrustedLender = useMutation(api.users.setTrustedLender);
 
   if (viewer === undefined) {
-    return (
-      <div className="min-h-screen bg-slate-50 flex items-center justify-center p-4">
-        <div className="flex items-center gap-2.5 text-slate-500 text-sm font-medium">
-          <div className="w-4 h-4 border-2 border-amber-600 border-t-transparent rounded-full animate-spin" />
-          <span>Verifying administrator privileges...</span>
-        </div>
-      </div>
-    );
+    return <Loading />;
   }
 
   // Prevent endpoint enumeration / reconnaissance by returning 404 for unauthorized users
